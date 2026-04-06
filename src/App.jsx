@@ -193,9 +193,8 @@ export default function App(){
   const proj=PROJECTS[project];
 
   const myLeads=useMemo(()=>{
-    let base=user?.role==="commercial"
-      ?leads.filter(l=>l.assigned===user.id&&l.project===project)
-      :leads.filter(l=>l.project===project);
+    let base=leads.filter(l=>l.project===project);
+    if(user?.role==="commercial") base=base.filter(l=>l.assigned===user.id);
     if(user?.role==="admin"&&comFocus!=="both") base=base.filter(l=>l.assigned===comFocus);
     base=byDate(base,dateRange);
     if(stFilter!=="all") base=base.filter(l=>l.status===stFilter);
@@ -253,7 +252,7 @@ export default function App(){
         </div>
 
         {/* Project Switcher */}
-        {user.role==="admin"&&(
+        {(
           <div style={S.projSwitch}>
             {Object.values(PROJECTS).map(p=>(
               <button key={p.id} onClick={()=>{setProject(p.id);setView("dashboard");}}
@@ -841,7 +840,7 @@ function LeadsView({leads,user,proj,stFilter,setSF,onAdd,onSel,onDel,onUpd,actio
                   </a>
                   </td>
                   <td style={S.td}>
-                    {lead.budget&&<span style={{color:"#f59e0b",fontSize:11,fontWeight:600}}>💰 {lead.budget}</span>}
+                    {lead.status==="rdv"&&lead.budget&&<span style={{color:"#f59e0b",fontSize:11,fontWeight:600}}>💰 {lead.budget}</span>}
                   </td>
                   <td style={S.td}><SrcBadge src={lead.source}/></td>
                   {isAdmin&&(
@@ -852,7 +851,9 @@ function LeadsView({leads,user,proj,stFilter,setSF,onAdd,onSel,onDel,onUpd,actio
                       </div>
                     </td>
                   )}
-                  <td style={S.td}><StPill status={lead.status} onChange={v=>onUpd(lead.id,{status:v})}/></td>
+                  <td style={S.td}>
+                    {(()=>{const st=STATUSES.find(s=>s.key===lead.status);return <span style={{...S.badge2,background:st?.color+"22",color:st?.color,border:`1px solid ${st?.color}44`,fontSize:9}}>{st?.step}. {st?.label}</span>;})()}
+                  </td>
                   <td style={S.td}>
                     {lead.rdvDate?(
                       <div>
@@ -952,7 +953,7 @@ function CommView({com,proj,project,leads,onSel,actions41}){
                 <tr key={lead.id} style={S.tr}>
                   <td style={S.td}><div style={{fontWeight:700,color:"#f1f5f9",fontSize:12}}>{lead.nom}</div><div style={{fontSize:10,color:"#64748b"}}>{lead.tel}</div></td>
                   <td style={S.td}>{lead.budget&&<span style={{color:"#f59e0b",fontSize:10}}>💰 {lead.budget}</span>}</td>
-                  <td style={S.td}><span style={{...S.badge2,background:st?.color+"22",color:st?.color,border:`1px solid ${st?.color}44`,fontSize:9}}>{st?.label}</span></td>
+                  <td style={S.td}><span style={{...S.badge2,background:st?.color+"22",color:st?.color,border:`1px solid ${st?.color}44`,fontSize:9}}>{st?.step}. {st?.label}</span></td>
                   <td style={S.td}>{lead.rdvDate?<span style={{color:"#8b5cf6",fontSize:10}}>📅 {lead.rdvDate}{lead.rdvTime?` ${lead.rdvTime}`:""}</span>:<span style={{color:"#334155",fontSize:10}}>—</span>}</td>
                   <td style={S.td}>
                     <div style={{display:"flex",alignItems:"center",gap:4,minWidth:60}}>
@@ -1077,7 +1078,7 @@ function LeadModal({lead,user,actions41,onClose,onAdd,onToggle,onUpd,proj}){
                 <span style={{color:"#94a3b8",fontSize:10}}>{CREDENTIALS[lead.assigned]?.name}</span>
               </div>
               <span style={{color:proj.color,fontSize:10}}>{proj.icon} {proj.name}</span>
-              {lead.budget&&<span style={{color:"#f59e0b",fontSize:10}}>💰 {lead.budget}</span>}
+              {lead.status==="rdv"&&lead.budget&&<span style={{color:"#f59e0b",fontSize:10}}>💰 {lead.budget}</span>}
             </div>
           </div>
           <div style={{display:"flex",gap:7,alignItems:"center"}}>
@@ -1086,6 +1087,18 @@ function LeadModal({lead,user,actions41,onClose,onAdd,onToggle,onUpd,proj}){
             </select>
             <button onClick={onClose} style={{...S.iconBtn,color:"#ef4444"}}><Icon name="x" size={15}/></button>
           </div>
+        </div>
+
+        {/* Budget Field - editable by commercial */}
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12,padding:"10px 14px",background:"#0f172a",borderRadius:8,border:"1px solid #f59e0b33"}}>
+          <span style={{color:"#f59e0b",fontSize:13}}>💰</span>
+          <span style={{color:"#64748b",fontSize:11,minWidth:50}}>Budget:</span>
+          <input
+            type="text"
+            value={lead.budget||""}
+            onChange={e=>onUpd(lead.id,{budget:e.target.value})}
+            placeholder="Ex: 1.5M, 2M-3M..."
+            style={{...S.input,flex:1,padding:"5px 10px",fontSize:11,borderColor:"#f59e0b33",color:"#f59e0b"}}/>
         </div>
 
         {/* RDV Section */}
@@ -1215,22 +1228,30 @@ function SrcBadge({src}){
 }
 function StPill({status,onChange}){
   const [open,setOpen]=useState(false);
-  const st=STATUSES.find(s=>s.key===status);
+  const st=STATUSES.find(s=>s.key===status)||STATUSES[0];
   return(
-    <div style={{position:"relative",display:"inline-block"}} onClick={e=>e.stopPropagation()}>
-      <button onClick={()=>setOpen(o=>!o)}
-        style={{...S.badge2,background:st?.color+"22",color:st?.color,border:`1px solid ${st?.color}44`,cursor:"pointer",fontSize:9,whiteSpace:"nowrap"}}>
-        {st?.step}. {st?.label} ▾
+    <div style={{position:"relative",display:"inline-block"}} onClick={e=>{e.stopPropagation();e.preventDefault();}}>
+      <button
+        onMouseDown={e=>{e.stopPropagation();e.preventDefault();setOpen(o=>!o);}}
+        style={{...S.badge2,background:st.color+"22",color:st.color,border:`1px solid ${st.color}44`,cursor:"pointer",fontSize:9,whiteSpace:"nowrap"}}>
+        {st.step}. {st.label} ▾
       </button>
       {open&&(
-        <div style={{position:"absolute",top:"110%",left:0,zIndex:10,background:"#0a0f1e",border:"1px solid #1e293b",borderRadius:7,overflow:"hidden",minWidth:130}}>
-          {STATUSES.map(s=>(
-            <button key={s.key} onClick={()=>{onChange(s.key);setOpen(false);}}
-              style={{display:"block",width:"100%",padding:"7px 11px",background:"none",border:"none",color:s.color,cursor:"pointer",textAlign:"left",fontSize:10}}>
-              {s.step}. {s.label}
-            </button>
-          ))}
-        </div>
+        <>
+          <div
+            style={{position:"fixed",inset:0,zIndex:9}}
+            onMouseDown={e=>{e.stopPropagation();setOpen(false);}}
+          />
+          <div style={{position:"absolute",top:"110%",left:0,zIndex:10,background:"#0a0f1e",border:"1px solid #334155",borderRadius:8,overflow:"hidden",minWidth:140,boxShadow:"0 8px 24px #0008"}}>
+            {STATUSES.map(s=>(
+              <button key={s.key}
+                onMouseDown={e=>{e.stopPropagation();e.preventDefault();onChange(s.key);setOpen(false);}}
+                style={{display:"block",width:"100%",padding:"8px 12px",background:s.key===status?"#1e293b22":"none",border:"none",color:s.color,cursor:"pointer",textAlign:"left",fontSize:10,fontWeight:s.key===status?700:400}}>
+                {s.step}. {s.label} {s.key===status?"✓":""}
+              </button>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

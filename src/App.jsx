@@ -70,13 +70,13 @@ const CREDENTIALS = {
   yassine: { pass:"Yassine123", role:"commercial", name:"Yassine", color:"#ec4899" },
 };
 
-const STATUSES = [
-  { key:"new",          label:"Nouveau Lead",  color:"#64748b", step:0 },
-  { key:"contacted",    label:"Contacté",      color:"#3b82f6", step:1 },
-  { key:"qualified",    label:"Qualifié",      color:"#f59e0b", step:2 },
-  { key:"rdv",          label:"RDV",           color:"#8b5cf6", step:3 },
-  { key:"nonqualified", label:"Non Qualifié",  color:"#f97316", step:4 },
-  { key:"lost",         label:"Perdu",         color:"#ef4444", step:5 },
+{ key:"new",          label:"Nouveau Lead",   color:"#64748b", step:0 },
+  { key:"contacted",    label:"Contacté",        color:"#3b82f6", step:1 },
+  { key:"qualified",    label:"Qualifié",        color:"#f59e0b", step:2 },
+  { key:"rdv",          label:"RDV",             color:"#8b5cf6", step:3 },
+  { key:"visited",      label:"Visité",          color:"#10b981", step:4 },
+  { key:"nonqualified", label:"Non Qualifié",    color:"#f97316", step:5 },
+  { key:"lost",         label:"Perdu",           color:"#ef4444", step:6 },
 ];
 
 const SOURCES    = ["Facebook","TikTok","LinkedIn","Google","Site Web","Autre"];

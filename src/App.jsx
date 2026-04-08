@@ -69,7 +69,7 @@ const CREDENTIALS = {
   zakaria: { pass:"Zakaria123", role:"commercial", name:"Zakaria", color:"#6366f1" },
   yassine: { pass:"Yassine123", role:"commercial", name:"Yassine", color:"#ec4899" },
 };
-
+const STATUSES = [
 { key:"new",          label:"Nouveau Lead",   color:"#64748b", step:0 },
   { key:"contacted",    label:"Contacté",        color:"#3b82f6", step:1 },
   { key:"qualified",    label:"Qualifié",        color:"#f59e0b", step:2 },

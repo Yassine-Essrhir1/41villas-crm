@@ -90,7 +90,7 @@ const DEFAULT_ACTIONS = [
 ];
 
 const DATE_RANGES = [
-  {key:"all",label:"Tout"},{key:"4",label:"4j"},{key:"7",label:"7j"},
+  {key:"all",label:"Tout"},{key:"1",label:"1j"},{key:"3",label:"3j"},{key:"4",label:"4j"},{key:"7",label:"7j"},
   {key:"15",label:"15j"},{key:"30",label:"30j"},{key:"90",label:"3m"},
 ];
 
